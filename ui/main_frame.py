@@ -6,6 +6,8 @@ from utils.wordcloud_helper import generate_wordcloud_image
 from ui.word_count_panel import WordCountPanel
 from ui.word_list_panel import WordListPanel
 from ui.wordcloud_panel import WordCloudPanel
+from ui.text_paste_panel import TextPastePanel  # NEW import
+
 
 class MainFrame(wx.Frame):
     def __init__(self, parent, title, size):
@@ -14,22 +16,29 @@ class MainFrame(wx.Frame):
         panel = wx.Panel(self)
         main_sizer = wx.BoxSizer(wx.VERTICAL)
 
-        # Panels
+        # File upload button
         self.open_btn = wx.Button(panel, label="Open file")
         self.open_btn.Bind(wx.EVT_BUTTON, self.on_open_file)
 
+        # Panels
         self.word_count_panel = WordCountPanel(panel)
         self.word_count_panel.update_count(0)
         self.top_nonstopwords_panel = WordListPanel(panel, title="Top 10 Words")
         self.top_stopwords_panel = WordListPanel(panel, title="Top 10 Stopwords")
         self.wordcloud_panel = WordCloudPanel(panel)
 
-        # New layout: horizontal sizer for main content below the button
+        # NEW: Text paste panel, alternate input method with callback
+        self.text_paste_panel = TextPastePanel(panel, on_result_callback=self.on_text_processed)
+
+        # Layout:
+
+        # Horizontal sizer for main content below inputs
         content_sizer = wx.BoxSizer(wx.HORIZONTAL)
 
-        # Left vertical stack: button on top + word count panel + word lists
+        # Left vertical stack: file button, text paste, word count, and lists
         left_sizer = wx.BoxSizer(wx.VERTICAL)
-        left_sizer.Add(self.open_btn, 0, wx.ALL | wx.ALIGN_LEFT, 10)  # button tucked top-left
+        left_sizer.Add(self.open_btn, 0, wx.ALL | wx.ALIGN_LEFT, 10)  # file upload button top-left
+        left_sizer.Add(self.text_paste_panel, 1, wx.EXPAND | wx.ALL, 10)  # paste panel below button
         left_sizer.Add(self.word_count_panel, 0, wx.EXPAND | wx.ALL, 10)
 
         lists_sizer = wx.BoxSizer(wx.VERTICAL)
@@ -66,12 +75,19 @@ class MainFrame(wx.Frame):
         result = analyze_text(content)
 
         # Update UI panels
+        self._update_ui_from_result(result)
+
+    def on_text_processed(self, result, wx_image):
+        # This is the callback from the TextPastePanel when user pastes & processes text
+        self._update_ui_from_result(result, wx_image)
+
+    def _update_ui_from_result(self, result, wx_image=None):
         self.word_count_panel.update_count(result['total_words'])
         self.top_nonstopwords_panel.update_list(result['top_nonstopwords'])
         self.top_stopwords_panel.update_list(result['top_stopwords'])
 
-        # Generate and update word cloud
-        wx_image = generate_wordcloud_image(result['nonstopword_counts'])
+        if wx_image is None:
+            wx_image = generate_wordcloud_image(result['nonstopword_counts'])
         self.wordcloud_panel.update_wordcloud(wx_image)
 
     def show_file_dialog(self):
