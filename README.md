@@ -1,12 +1,14 @@
 # EXE TEMPLATE PROJECT
 
-## Launch Virtual Environment
+## Getting Started
+
+### Launch Virtual Environment
 
 ```bash
 .\venv\Scripts\activate
 ```
 
-## Create new EXE
+### Create new EXE
 
 Build command with versioning:
 
@@ -19,6 +21,8 @@ Deprecated build command:
 
 ## Framework Overview
 
+### Architecture
+
 `main.py` The main python file
 
 `main.spec` Config file for the EXE compiler
@@ -28,3 +32,9 @@ Deprecated build command:
 `dist/` Where new EXEs will be created
 
 `requirements.txt` pip package manager config
+
+### Tools
+
+* **Package manager**: PIP
+* **EXE**: PyInstaller
+* **UI**: wxPython
