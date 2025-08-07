@@ -1,6 +1,5 @@
 import wx
 from utils.file_helpers import read_file_content
-from utils.text_analysis import analyze_text
 from utils.wordcloud_helper import generate_wordcloud_image
 
 from ui.word_count_panel import WordCountPanel
@@ -15,10 +14,6 @@ class MainFrame(wx.Frame):
 
         panel = wx.Panel(self)
         main_sizer = wx.BoxSizer(wx.VERTICAL)
-
-        # File upload button
-        self.open_btn = wx.Button(panel, label="Open file")
-        self.open_btn.Bind(wx.EVT_BUTTON, self.on_open_file)
 
         # Panels
         self.word_count_panel = WordCountPanel(panel)
@@ -35,10 +30,9 @@ class MainFrame(wx.Frame):
         # Horizontal sizer for main content below inputs
         content_sizer = wx.BoxSizer(wx.HORIZONTAL)
 
-        # Left vertical stack: file button, text paste, word count, and lists
+        # Left vertical stack: text paste panel, word count, and lists
         left_sizer = wx.BoxSizer(wx.VERTICAL)
-        left_sizer.Add(self.open_btn, 0, wx.ALL | wx.ALIGN_LEFT, 10)  # file upload button top-left
-        left_sizer.Add(self.text_paste_panel, 1, wx.EXPAND | wx.ALL, 10)  # paste panel below button
+        left_sizer.Add(self.text_paste_panel, 1, wx.EXPAND | wx.ALL, 10)  # text paste panel includes Import and Process buttons
         left_sizer.Add(self.word_count_panel, 0, wx.EXPAND | wx.ALL, 10)
 
         lists_sizer = wx.BoxSizer(wx.VERTICAL)
@@ -71,11 +65,8 @@ class MainFrame(wx.Frame):
             wx.MessageBox(f"Error reading file:\n{e}", "Error", wx.ICON_ERROR)
             return
 
-        # Analyze text
-        result = analyze_text(content)
-
-        # Update UI panels
-        self._update_ui_from_result(result)
+        # Instead of analyzing here, put content into paste panel and process from there:
+        self.text_paste_panel.set_text_and_process(content)
 
     def on_text_processed(self, result, wx_image):
         # This is the callback from the TextPastePanel when user pastes & processes text

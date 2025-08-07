@@ -1,85 +1,81 @@
 import wx
-import threading
+from utils.file_helpers import read_file_content
 from utils.text_analysis import analyze_text
 from utils.wordcloud_helper import generate_wordcloud_image
 
 class TextPastePanel(wx.Panel):
-    """
-    Panel for pasting large text and processing it asynchronously.
-    This is an ALTERNATE input method to file upload.
-    """
-
-    def __init__(self, parent, on_result_callback):
-        """
-        :param parent: wx parent window
-        :param on_result_callback: function(result_dict) called when processing done
-        """
+    def __init__(self, parent, on_result_callback=None):
         super().__init__(parent)
-
         self.on_result_callback = on_result_callback
 
-        vbox = wx.BoxSizer(wx.VERTICAL)
+        main_sizer = wx.BoxSizer(wx.VERTICAL)
 
-        # Instruction label
-        label = wx.StaticText(self, label="Paste your text below (large text supported):")
-        vbox.Add(label, 0, wx.ALL, 5)
+        label = wx.StaticText(self, label="Input text or import a file with text")
+        main_sizer.Add(label, 0, wx.ALL, 5)
 
-        # Large multiline text input
-        self.text_ctrl = wx.TextCtrl(self, style=wx.TE_MULTILINE | wx.TE_RICH2)
-        vbox.Add(self.text_ctrl, 1, wx.EXPAND | wx.ALL, 5)
+        self.text_ctrl = wx.TextCtrl(self, style=wx.TE_MULTILINE | wx.TE_WORDWRAP)
+        main_sizer.Add(self.text_ctrl, 1, wx.EXPAND | wx.ALL, 5)
 
-        # Process button
+        # Horizontal sizer for buttons side-by-side
+        btn_sizer = wx.BoxSizer(wx.HORIZONTAL)
+
+        self.import_btn = wx.Button(self, label="Import Text")
+        self.import_btn.Bind(wx.EVT_BUTTON, self.on_import)
+        btn_sizer.Add(self.import_btn, 0, wx.ALL, 5)
+
         self.process_btn = wx.Button(self, label="Process Text")
-        self.process_btn.Bind(wx.EVT_BUTTON, self.on_process_click)
-        vbox.Add(self.process_btn, 0, wx.ALL | wx.ALIGN_RIGHT, 5)
+        self.process_btn.Bind(wx.EVT_BUTTON, self.on_process)
+        btn_sizer.Add(self.process_btn, 0, wx.ALL, 5)
 
-        # Status label for feedback
-        self.status_label = wx.StaticText(self, label="")
-        vbox.Add(self.status_label, 0, wx.ALL, 5)
+        main_sizer.Add(btn_sizer, 0, wx.ALIGN_RIGHT)
 
-        self.SetSizer(vbox)
+        self.SetSizer(main_sizer)
 
-    def on_process_click(self, event):
-        text = self.text_ctrl.GetValue().strip()
-        if not text:
-            wx.MessageBox("Please paste some text before processing.", "No Text", wx.ICON_WARNING)
+    def set_text_and_process(self, text):
+        """
+        Set text and immediately process it (used by MainFrame when importing file)
+        """
+        self.text_ctrl.SetValue(text)
+        self.on_process()
+
+    def on_process(self, event=None):
+        """
+        Analyze the pasted text and call the callback with results
+        """
+        text = self.text_ctrl.GetValue()
+        if not text.strip():
+            wx.MessageBox("Please enter or import some text first.", "Info", wx.ICON_INFORMATION)
             return
 
-        # Disable controls while processing
-        self.process_btn.Disable()
-        self.text_ctrl.Disable()
-        self.status_label.SetLabel("Processing... please wait.")
-
-        # Start background thread to avoid freezing UI
-        thread = threading.Thread(target=self._process_text, args=(text,), daemon=True)
-        thread.start()
-
-    def _process_text(self, text):
         try:
-            # Run your analysis (can be slow for big text)
             result = analyze_text(text)
-
-            # Generate word cloud wx.Image (may take some time)
             wx_image = generate_wordcloud_image(result['nonstopword_counts'])
-
-            # We need to update UI on main thread, so use CallAfter
-            wx.CallAfter(self._processing_done, result, wx_image)
         except Exception as e:
-            wx.CallAfter(self._processing_error, str(e))
+            wx.MessageBox(f"Error processing text:\n{e}", "Error", wx.ICON_ERROR)
+            return
 
-    def _processing_done(self, result, wx_image):
-        # Re-enable controls
-        self.process_btn.Enable()
-        self.text_ctrl.Enable()
-        self.status_label.SetLabel("Processing complete.")
-
-        # Callback to parent with the result dict and image
-        if callable(self.on_result_callback):
+        if self.on_result_callback:
             self.on_result_callback(result, wx_image)
 
-    def _processing_error(self, error_msg):
-        self.process_btn.Enable()
-        self.text_ctrl.Enable()
-        self.status_label.SetLabel("")
+    def on_import(self, event):
+        """
+        Open a file dialog, read the file content and set it into the text box, then process it.
+        """
+        wildcard = ("Text files (*.txt)|*.txt|"
+                    "PDF files (*.pdf)|*.pdf|"
+                    "Word documents (*.docx)|*.docx|"
+                    "Rich Text Format (*.rtf)|*.rtf")
 
-        wx.MessageBox(f"Error during processing:\n{error_msg}", "Error", wx.ICON_ERROR)
+        with wx.FileDialog(self, "Import text from file", wildcard=wildcard,
+                           style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as dlg:
+            if dlg.ShowModal() == wx.ID_CANCEL:
+                return  # User cancelled
+
+            path = dlg.GetPath()
+            try:
+                content = read_file_content(path)
+            except Exception as e:
+                wx.MessageBox(f"Error reading file:\n{e}", "Error", wx.ICON_ERROR)
+                return
+
+            self.set_text_and_process(content)
