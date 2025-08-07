@@ -14,27 +14,43 @@ class MainFrame(wx.Frame):
         panel = wx.Panel(self)
         main_sizer = wx.BoxSizer(wx.VERTICAL)
 
+        # Panels
         self.open_btn = wx.Button(panel, label="Open file")
         self.open_btn.Bind(wx.EVT_BUTTON, self.on_open_file)
-        main_sizer.Add(self.open_btn, 0, wx.ALL | wx.CENTER, 10)
 
-        # Panels
         self.word_count_panel = WordCountPanel(panel)
+        self.word_count_panel.update_count(0)
         self.top_nonstopwords_panel = WordListPanel(panel, title="Top 10 Words")
         self.top_stopwords_panel = WordListPanel(panel, title="Top 10 Stopwords")
         self.wordcloud_panel = WordCloudPanel(panel)
 
-        # Layout panels
-        main_sizer.Add(self.word_count_panel, 0, wx.EXPAND | wx.ALL, 10)
+        # New layout: horizontal sizer for main content below the button
+        content_sizer = wx.BoxSizer(wx.HORIZONTAL)
 
-        lists_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        lists_sizer.Add(self.top_nonstopwords_panel, 1, wx.EXPAND | wx.RIGHT, 5)
-        lists_sizer.Add(self.top_stopwords_panel, 1, wx.EXPAND | wx.LEFT, 5)
-        main_sizer.Add(lists_sizer, 1, wx.EXPAND | wx.LEFT | wx.RIGHT, 10)
+        # Left vertical stack: button on top + word count panel + word lists
+        left_sizer = wx.BoxSizer(wx.VERTICAL)
+        left_sizer.Add(self.open_btn, 0, wx.ALL | wx.ALIGN_LEFT, 10)  # button tucked top-left
+        left_sizer.Add(self.word_count_panel, 0, wx.EXPAND | wx.ALL, 10)
 
-        main_sizer.Add(self.wordcloud_panel, 1, wx.EXPAND | wx.ALL, 10)
+        lists_sizer = wx.BoxSizer(wx.VERTICAL)
+        lists_sizer.Add(self.top_nonstopwords_panel, 1, wx.EXPAND | wx.BOTTOM, 5)
+        lists_sizer.Add(self.top_stopwords_panel, 1, wx.EXPAND)
+        left_sizer.Add(lists_sizer, 1, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+
+        content_sizer.Add(left_sizer, 0, wx.EXPAND)
+
+        # Word cloud panel takes remaining space on the right
+        content_sizer.Add(self.wordcloud_panel, 1, wx.EXPAND | wx.ALL, 10)
+
+        main_sizer.Add(content_sizer, 1, wx.EXPAND)
 
         panel.SetSizer(main_sizer)
+        panel.Layout()
+        self.Layout()
+
+        self.SetMinSize((800, 600))   # set a comfortable minimum size
+        self.Centre()
+        self.Maximize(True)           # start maximized
 
     def on_open_file(self, event):
         path = self.show_file_dialog()
@@ -66,5 +82,8 @@ class MainFrame(wx.Frame):
         dlg = wx.FileDialog(self, "Open file", wildcard=wildcard,
                             style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
         if dlg.ShowModal() == wx.ID_CANCEL:
+            dlg.Destroy()
             return None
-        return dlg.GetPath()
+        path = dlg.GetPath()
+        dlg.Destroy()
+        return path
