@@ -3,6 +3,7 @@ from utils.text_analysis import STOPWORDS
 from ui.word_list_panel import WordListPanel
 from ui.wordcloud_panel import WordCloudPanel
 from ui.text_input_panel import TextInputPanel
+from ui.stop_words_dialog import StopwordsInfoDialog
 
 class MainFrame(wx.Frame):
     def __init__(self, parent, title, size):
@@ -10,8 +11,6 @@ class MainFrame(wx.Frame):
 
         panel = wx.Panel(self)  # Root panel for the frame
         main_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        # This sizer splits the frame horizontally into two main sections:
-        # left rail and main panel
 
         # --------------------------
         # Left rail vertical sizer: stacks elements vertically
@@ -22,39 +21,41 @@ class MainFrame(wx.Frame):
         self.wordcloud_panel = WordCloudPanel(panel)
         left_sizer.Add(self.wordcloud_panel, 0, wx.ALL | wx.ALIGN_LEFT, 10)
 
-        # Stopwords info label (bold)
-        stopword_label = wx.StaticText(panel, label="Learn more about stopwords")
-        font = stopword_label.GetFont()
-        font.MakeBold()
-        stopword_label.SetFont(font)
-        left_sizer.Add(stopword_label, 0, wx.LEFT | wx.BOTTOM, 5)
+        # Stopwords info button (gray default style)
+        info_btn = wx.Button(panel, label="Learn more about stopwords")
+        info_btn.SetToolTip("Click for details about stopwords")
+        info_btn.Bind(wx.EVT_BUTTON, self.on_show_stopwords_modal)
 
-        # Top Words panel
+        left_sizer.Add(info_btn, 0, wx.LEFT | wx.BOTTOM | wx.EXPAND, 5)
+
+        # Top Words panel — tooltip only, no modal on icon click
         self.top_nonstopwords_panel = WordListPanel(
             panel,
             title="Top Words",
-            stopwords_tooltip_text="Ignores stopwords in analysis."
+            stopwords_tooltip_text="Ignores stopwords in analysis.",
+            click_to_open_modal=False,
         )
         left_sizer.Add(self.top_nonstopwords_panel, 1, wx.EXPAND | wx.BOTTOM, 5)
 
-        # Top Bigrams panel
+        # Top Bigrams panel — tooltip only, no modal on icon click
         self.top_bigrams_panel = WordListPanel(
             panel,
             title="Top Bigrams",
-            stopwords_tooltip_text="Phrases entirely composed of stopwords are excluded."
+            stopwords_tooltip_text="Phrases entirely composed of stopwords are excluded.",
+            click_to_open_modal=False,
         )
         left_sizer.Add(self.top_bigrams_panel, 1, wx.EXPAND | wx.BOTTOM, 5)
 
-        # Top Trigrams panel
+        # Top Trigrams panel — tooltip only, no modal on icon click
         self.top_trigrams_panel = WordListPanel(
             panel,
             title="Top Trigrams",
-            stopwords_tooltip_text="Phrases entirely composed of stopwords are excluded."
+            stopwords_tooltip_text="Phrases entirely composed of stopwords are excluded.",
+            click_to_open_modal=False,
         )
         left_sizer.Add(self.top_trigrams_panel, 1, wx.EXPAND)
 
         # Add left rail sizer to main horizontal sizer
-        # Proportion=0 means left rail uses minimal width based on content width
         main_sizer.Add(left_sizer, 0, wx.EXPAND | wx.ALL, 10)
 
         # --------------------------
@@ -73,8 +74,12 @@ class MainFrame(wx.Frame):
         self.Centre()
         self.Maximize(True)
 
+    def on_show_stopwords_modal(self, event):
+        dlg = StopwordsInfoDialog(self)
+        dlg.ShowModal()
+        dlg.Destroy()
+
     def on_text_processed(self, result, wx_image=None):
-        # Update the word list panels on the left rail
         self.top_nonstopwords_panel.update_list(result['top_nonstopwords'])
         self.top_bigrams_panel.update_list(result['top_bigrams'])
         self.top_trigrams_panel.update_list(result['top_trigrams'])

@@ -4,12 +4,12 @@ import html as _html
 import re
 
 class WordListPanel(wx.Panel):
-    def __init__(self, parent, title="", stopwords_tooltip_text=None):
+    def __init__(self, parent, title="", stopwords_tooltip_text=None, click_to_open_modal=False):
         """
         Word list panel with optional inline help.
         If `stopwords_tooltip_text` is provided:
           - The small question-mark icon will show a short hover tooltip.
-          - Clicking the icon opens a modal dialog rendering the full text.
+          - If `click_to_open_modal` is True, clicking the icon opens a modal dialog rendering the full text.
           - In the dialog, **double-asterisk** markup (e.g. **stopwords**) will be rendered bold.
         """
         super().__init__(parent)
@@ -26,23 +26,19 @@ class WordListPanel(wx.Panel):
 
         title_sizer.Add(self.title_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 0)
 
-        # If help text provided, add an icon with a short tooltip and click to show full modal
+        # If help text provided, add an icon with a short tooltip and optional click to show modal
         self._help_text = stopwords_tooltip_text
         if stopwords_tooltip_text:
             # Use a standard question icon
             icon_bmp = wx.ArtProvider.GetBitmap(wx.ART_QUESTION, wx.ART_TOOLBAR, (16, 16))
             icon = wx.StaticBitmap(self, bitmap=icon_bmp)
 
-            # Short hover tooltip (keep it concise)
-            try:
-                # Prefer a short summary for hover; do not put the full long text here
-                icon.SetToolTip("Click for details about stopwords")
-            except Exception:
-                # Fallback: set string if tooltips object behavior differs across wx versions
-                icon.SetToolTip("Click for details")
+            # Set the tooltip to the short text
+            icon.SetToolTip(stopwords_tooltip_text)
 
-            # Bind click to open the modal with formatted content
-            icon.Bind(wx.EVT_LEFT_DOWN, lambda evt: self._show_help_dialog())
+            # Bind click event only if enabled
+            if click_to_open_modal:
+                icon.Bind(wx.EVT_LEFT_DOWN, lambda evt: self._show_help_dialog())
 
             title_sizer.Add(icon, 0, wx.ALIGN_CENTER_VERTICAL)
 
@@ -94,19 +90,15 @@ class WordListPanel(wx.Panel):
         dlg = wx.Dialog(self.GetTopLevelParent() or self, title="Details", size=(520, 420))
         dlg_sizer = wx.BoxSizer(wx.VERTICAL)
 
-        # Optional header: bold label (extracted from first line if desired)
-        # Here we just add an HtmlWindow for rich text display
         html_win = wx.html.HtmlWindow(dlg, style=wx.html.HW_SCROLLBAR_AUTO)
         try:
             html_win.SetPage(html_content)
         except Exception:
-            # Fallback: if HtmlWindow fails for some reason, show plain text in read-only box
             fallback = wx.TextCtrl(dlg, value=self._help_text, style=wx.TE_MULTILINE | wx.TE_READONLY)
             dlg_sizer.Add(fallback, 1, wx.EXPAND | wx.ALL, 8)
         else:
             dlg_sizer.Add(html_win, 1, wx.EXPAND | wx.ALL, 8)
 
-        # Close button
         btns = dlg.CreateStdDialogButtonSizer(wx.OK)
         dlg_sizer.Add(btns, 0, wx.ALIGN_CENTER | wx.ALL, 8)
 
