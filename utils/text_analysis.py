@@ -1,9 +1,6 @@
 import re
 from collections import Counter
-from nltk.corpus import stopwords
-
-# Preload English stopwords set
-STOPWORDS = set(stopwords.words('english'))
+from utils.spacy_stopwords import STOPWORDS
 
 def clean_and_tokenize(text):
     # Lowercase, remove punctuation, split words

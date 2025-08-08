@@ -3,13 +3,12 @@ import re
 import os
 from packaging import version
 import shutil
-import nltk
+import sys
 
 DIST_DIR = "dist"
 EXE_BASE_NAME = "main"
 VERSIONED_PREFIX = "main_v"
 MAIN_SCRIPT = "main.py"
-SPEC_FILE = f"{EXE_BASE_NAME}.spec"
 
 def find_latest_version():
     if not os.path.exists(DIST_DIR):
@@ -40,14 +39,21 @@ def increment_patch(ver):
     return f"{major}.{minor}.{patch}"
 
 def build_exe():
-    # Dynamically find the nltk stopwords folder path
-    stopwords_data_path = os.path.dirname(nltk.data.find('corpora/stopwords').path)
+    import en_core_web_sm
+    model_path = os.path.dirname(en_core_web_sm.__file__)
+    stopwords_path = "utils/spacy_stopwords.py"
 
-    # Format the --add-data argument based on OS
+    # Format --add-data arguments based on OS
     if os.name == 'nt':  # Windows
-        add_data_arg = f"{stopwords_data_path};corpora/stopwords"
+        data_args = [
+            f"{model_path};en_core_web_sm",
+            f"{stopwords_path};utils"
+        ]
     else:
-        add_data_arg = f"{stopwords_data_path}:corpora/stopwords"
+        data_args = [
+            f"{model_path}:en_core_web_sm",
+            f"{stopwords_path}:utils"
+        ]
 
     cmd = [
         "pyinstaller",
@@ -57,11 +63,14 @@ def build_exe():
         "--name", EXE_BASE_NAME,
         MAIN_SCRIPT,
         "--hidden-import=docx",
-        "--add-data", add_data_arg,
+        "--hidden-import=en_core_web_sm",
     ]
 
+    # Add --add-data for each path
+    for data_arg in data_args:
+        cmd.extend(["--add-data", data_arg])
+
     print(f"Building EXE with fixed name '{EXE_BASE_NAME}.exe'")
-    print(f"Adding NLTK stopwords data from: {stopwords_data_path}")
     subprocess.run(cmd, check=True)
 
 def main():
@@ -70,6 +79,10 @@ def main():
         new_version = "1.0.0"
     else:
         new_version = increment_patch(latest_ver)
+
+    # Run generate_stopwords.py to update the stopwords file before build
+    print("Generating stopwords file from SpaCy...")
+    subprocess.run([sys.executable, "utils/generate_stopwords.py"], check=True)
 
     build_exe()
 

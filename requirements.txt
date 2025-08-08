@@ -1,3 +1,4 @@
 packaging==25.0
 wxpython==4.2.3
 PyPDF2
+spacy
