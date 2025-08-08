@@ -3,16 +3,24 @@ from collections import Counter
 from data.spacy_stopwords import STOPWORDS
 
 def clean_and_tokenize(text):
-    # Lowercase, remove punctuation, split words
-    words = re.findall(r'\b\w+\b', text.lower())
-    return words
+    """
+    Tokenize text by splitting on whitespace, then remove leading/trailing punctuation
+    but keep internal apostrophes (contractions) intact.
+    """
+    tokens = text.lower().split()
+    cleaned_tokens = []
+    for token in tokens:
+        # Remove leading/trailing punctuation (but not internal apostrophes)
+        cleaned = re.sub(r"(^[^\w']+|[^\w']+$)", '', token)
+        if cleaned:
+            cleaned_tokens.append(cleaned)
+    return cleaned_tokens
 
 def is_all_stopwords(ngram, stopwords_set):
     return all(word in stopwords_set for word in ngram)
 
 def get_filtered_ngrams(words, n, stopwords_set):
     ngrams = zip(*[words[i:] for i in range(n)])
-    # Exclude n-grams that are entirely stopwords
     filtered = [ngram for ngram in ngrams if not is_all_stopwords(ngram, stopwords_set)]
     return filtered
 
