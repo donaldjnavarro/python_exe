@@ -1,5 +1,7 @@
 # EXE TEMPLATE PROJECT
 
+Provides an EXE file for an app that analyzes text and gives some metrics and visualization to give writers perspective on their writing.
+
 ## Getting Started
 
 ### Launch Virtual Environment
