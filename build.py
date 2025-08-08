@@ -52,6 +52,7 @@ def build_exe():
     cmd = [
         "pyinstaller",
         "--onefile",
+        "--noconsole",
         "--name", EXE_BASE_NAME,
         MAIN_SCRIPT,
         "--hidden-import=docx",
