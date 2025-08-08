@@ -35,22 +35,49 @@ class WordCloudPanel(wx.Panel):
             self.Layout()
 
     def on_click(self, event):
-        if not self.current_image:
+        if not hasattr(self, 'current_image') or self.current_image is None:
             return
+
+        dlg = wx.Dialog(self, title="Wordcloud - Click and drag to resize", size=(400, 400), style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER)
         
-        dlg = wx.Dialog(self, title="Wordcloud", size=(600, 600), style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER)
+        # Bitmap control for displaying image
         self.bitmap_ctrl = wx.StaticBitmap(dlg)
-
-        sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(self.bitmap_ctrl, 1, wx.EXPAND | wx.ALL, 10)
-        dlg.SetSizer(sizer)
-
+        
+        # Save button
+        save_btn = wx.Button(dlg, label="Save Image")
+        
+        # Event handler for save button
+        def on_save(event):
+            with wx.FileDialog(dlg, "Save Wordcloud Image", wildcard="PNG files (*.png)|*.png|JPEG files (*.jpg)|*.jpg",
+                            style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT) as fileDialog:
+                if fileDialog.ShowModal() == wx.ID_CANCEL:
+                    return  # User cancelled
+                path = fileDialog.GetPath()
+                ext = os.path.splitext(path)[1].lower()
+                # Default to PNG if no extension or unknown
+                img_format = wx.BITMAP_TYPE_PNG
+                if ext in ['.jpg', '.jpeg']:
+                    img_format = wx.BITMAP_TYPE_JPEG
+                try:
+                    self.current_image.SaveFile(path, img_format)
+                    wx.MessageBox(f"Image saved to:\n{path}", "Success", wx.ICON_INFORMATION)
+                except Exception as e:
+                    wx.MessageBox(f"Failed to save image:\n{e}", "Error", wx.ICON_ERROR)
+        
+        save_btn.Bind(wx.EVT_BUTTON, on_save)
+        
+        # Layout
+        vbox = wx.BoxSizer(wx.VERTICAL)
+        vbox.Add(self.bitmap_ctrl, 1, wx.EXPAND | wx.ALL, 10)
+        vbox.Add(save_btn, 0, wx.ALIGN_CENTER | wx.BOTTOM, 10)
+        
+        dlg.SetSizer(vbox)
+        
         def on_resize(evt):
             size = dlg.GetClientSize()
-            max_w, max_h = size.GetWidth() - 20, size.GetHeight() - 20
+            max_w, max_h = size.GetWidth() - 20, size.GetHeight() - 60  # leave room for button
             img = self.current_image.Copy()
             w, h = img.GetWidth(), img.GetHeight()
-
             scale = min(max_w / w, max_h / h, 1.0)
             new_w = int(w * scale)
             new_h = int(h * scale)
@@ -60,14 +87,13 @@ class WordCloudPanel(wx.Panel):
             dlg.Layout()
             if evt is not None:
                 evt.Skip()
-
-
+        
         dlg.Bind(wx.EVT_SIZE, on_resize)
-
-        # Initial display
+        
+        # Initial set image
         on_resize(None)
-
         dlg.ShowModal()
         dlg.Destroy()
+
 
 
