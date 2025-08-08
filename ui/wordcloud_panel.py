@@ -1,49 +1,30 @@
 import wx
 
 class WordCloudPanel(wx.Panel):
-    def __init__(self, parent):
-        super().__init__(parent)
-        self.current_wx_image = None
-        self.bitmap = None
+    def __init__(self, parent, size=(180, 180)):
+        super().__init__(parent, size=size)
+        self.SetMinSize(size)
 
-        self.Bind(wx.EVT_PAINT, self.on_paint)
-        self.Bind(wx.EVT_SIZE, self.on_size)
+    def set_wordcloud(self, wx_image):
+        # Clear existing children
+        for child in self.GetChildren():
+            child.Destroy()
 
-    def update_wordcloud(self, wx_image):
-        self.current_wx_image = wx_image
-        self._refresh_bitmap()
-        self.Refresh()
+        if wx_image:
+            panel_size = self.GetSize()
+            img = wx_image.Copy()
+            w, h = img.GetWidth(), img.GetHeight()
+            max_w, max_h = panel_size.GetWidth(), panel_size.GetHeight()
 
-    def _refresh_bitmap(self):
-        if not self.current_wx_image:
-            self.bitmap = None
-            return
+            scale_w = max_w / w
+            scale_h = max_h / h
+            scale = min(scale_w, scale_h, 1.0)  # Don't upscale
 
-        panel_size = self.GetClientSize()
-        img_w, img_h = self.current_wx_image.GetWidth(), self.current_wx_image.GetHeight()
+            new_w = int(w * scale)
+            new_h = int(h * scale)
 
-        scale_w = panel_size.width / img_w
-        scale_h = panel_size.height / img_h
-        # Allow scaling UP to fill space
-        scale = min(scale_w, scale_h)  
+            img = img.Scale(new_w, new_h, wx.IMAGE_QUALITY_HIGH)
 
-        new_w = max(int(img_w * scale), 1)
-        new_h = max(int(img_h * scale), 1)
-
-        scaled_img = self.current_wx_image.Scale(new_w, new_h, wx.IMAGE_QUALITY_HIGH)
-        self.bitmap = wx.Bitmap(scaled_img)
-
-    def on_paint(self, event):
-        dc = wx.PaintDC(self)
-        if self.bitmap:
-            # Center bitmap in panel
-            w, h = self.GetClientSize()
-            bmp_w, bmp_h = self.bitmap.GetWidth(), self.bitmap.GetHeight()
-            x = (w - bmp_w) // 2
-            y = (h - bmp_h) // 2
-            dc.DrawBitmap(self.bitmap, x, y)
-
-    def on_size(self, event):
-        self._refresh_bitmap()
-        self.Refresh()
-        event.Skip()
+            bmp = wx.Bitmap(img)
+            wx.StaticBitmap(self, bitmap=bmp)
+            self.Layout()
