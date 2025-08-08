@@ -1,6 +1,6 @@
 import re
 from collections import Counter
-from utils.spacy_stopwords import STOPWORDS
+from data.spacy_stopwords import STOPWORDS
 
 def clean_and_tokenize(text):
     # Lowercase, remove punctuation, split words

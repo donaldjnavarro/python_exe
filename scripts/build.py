@@ -41,7 +41,7 @@ def increment_patch(ver):
 def build_exe():
     import en_core_web_sm
     model_path = os.path.dirname(en_core_web_sm.__file__)
-    stopwords_path = "utils/spacy_stopwords.py"
+    stopwords_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data", "spacy_stopwords.py"))
 
     # Format --add-data arguments based on OS
     if os.name == 'nt':  # Windows
@@ -80,9 +80,13 @@ def main():
     else:
         new_version = increment_patch(latest_ver)
 
+    # Get absolute path to generate_stopwords.py
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    gen_stopwords_path = os.path.abspath(os.path.join(script_dir, "..", "scripts", "generate_stopwords.py"))
+
     # Run generate_stopwords.py to update the stopwords file before build
     print("Generating stopwords file from SpaCy...")
-    subprocess.run([sys.executable, "utils/generate_stopwords.py"], check=True)
+    subprocess.run([sys.executable, gen_stopwords_path], check=True)
 
     build_exe()
 
