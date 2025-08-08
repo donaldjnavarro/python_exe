@@ -53,6 +53,7 @@ def build_exe():
         "pyinstaller",
         "--onefile",
         "--noconsole",
+        "--exclude-module=tkinter",
         "--name", EXE_BASE_NAME,
         MAIN_SCRIPT,
         "--hidden-import=docx",
