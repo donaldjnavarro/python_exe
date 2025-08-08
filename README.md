@@ -10,6 +10,12 @@ Provides an EXE file for an app that analyzes text and gives some metrics and vi
 .\venv\Scripts\activate
 ```
 
+### Run without EXE
+
+```bash
+python main.py
+```
+
 ### Create new EXE
 
 Build command with versioning:
