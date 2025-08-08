@@ -1,5 +1,4 @@
 import wx
-import os
 from utils.file_helpers import read_file_content
 from utils.text_analysis import analyze_text
 from utils.wordcloud_helper import generate_wordcloud_image
