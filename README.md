@@ -1,10 +1,12 @@
-# EXE TEMPLATE PROJECT
+# WRITING ASSISTANT APP
 
-Provides an EXE file for an app that analyzes text and gives some metrics and visualization to give writers perspective on their writing.
+App that analyzes a block of text and gives some metrics and visualization to give writers perspective on their writing.
 
 ## Getting Started
 
 ### Launch Virtual Environment
+
+Do this first, whether running in python or generating EXEs.
 
 ```bash
 .\venv\Scripts\activate
@@ -18,10 +20,10 @@ python main.py
 
 ### Create new EXE
 
-Build command with versioning:
+Build command. Version numbers will be generated based on existing file versions in the `dist/` folder.
 
 ```bash
-python build.py
+python scripts/build.py
 ```
 
 Deprecated build command:
@@ -35,7 +37,7 @@ Deprecated build command:
 
 `main.spec` Config file for the EXE compiler
 
-`build.py` Handles the versioning and other particulars of new EXE builds
+`scripts/build.py` Handles the versioning and other particulars of new EXE builds
 
 `dist/` Where new EXEs will be created
 
