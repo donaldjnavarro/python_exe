@@ -42,7 +42,7 @@ jobs:
         shell: pwsh
         run: |
           Write-Host "Checking for versioned EXE in dist folder"
-          $files = Get-ChildItem dist\main_v*.exe
+          $files = Get-ChildItem dist\writing_assistant_v*.exe
           if ($files.Count -eq 0) {
             Write-Error "No versioned EXE found, build failed!"
             exit 1
