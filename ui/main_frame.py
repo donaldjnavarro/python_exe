@@ -1,7 +1,6 @@
 import wx
 import re
 from ui.word_list_panel import WordListPanel
-from ui.word_count_panel import WordCountPanel
 from ui.wordcloud_panel import WordCloudPanel
 from ui.text_input_panel import TextInputPanel
 from ui.stop_words_dialog import StopwordsInfoDialog
@@ -36,37 +35,42 @@ class MainFrame(wx.Frame):
     def _build_left_rail(self):
         left_sizer = wx.BoxSizer(wx.VERTICAL)
 
-        # Word count panel
-        self.word_count_panel = WordCountPanel(self.panel)
-        left_sizer.Add(self.word_count_panel, 0, wx.EXPAND | wx.ALL, 10)
-
-        # Wordcloud panel
+        # Wordcloud panel at top — expand horizontally, natural vertical height
         self.wordcloud_panel = WordCloudPanel(self.panel)
-        self.wordcloud_panel.SetMinSize((400, 300))
-        left_sizer.Add(self.wordcloud_panel, 1, wx.EXPAND | wx.ALL, 10)
+        # NOTE: no SetMinSize and proportion=0 so it won't reserve a big empty block
+        left_sizer.Add(self.wordcloud_panel, 0, wx.EXPAND | wx.ALL, 0)
 
         # Stopwords info button
         info_btn = wx.Button(self.panel, label="Learn more about stopwords")
         info_btn.SetToolTip("Click for details about stopwords")
         info_btn.Bind(wx.EVT_BUTTON, self.on_show_stopwords_modal)
-        left_sizer.Add(info_btn, 0, wx.EXPAND | wx.LEFT | wx.BOTTOM, 5)
+        left_sizer.Add(info_btn, 0, wx.EXPAND | wx.ALL, 5)
 
-        # Spacer to push bottom tables to bottom
-        left_sizer.AddStretchSpacer(1)
-
-        # Bottom tables container
+        # Bottom tables container — takes ALL remaining vertical space
+        tables_panel = wx.Panel(self.panel)
         table_sizer = wx.BoxSizer(wx.VERTICAL)
-        self.top_nonstopwords_panel = WordListPanel(self.panel, "Top Words",
-                                                    "Ignores stopwords in analysis.", False)
+
+        self.top_nonstopwords_panel = WordListPanel(
+            tables_panel, "Top Words",
+            "Ignores stopwords in analysis.", False
+        )
         table_sizer.Add(self.top_nonstopwords_panel, 1, wx.EXPAND | wx.BOTTOM, 5)
-        self.top_bigrams_panel = WordListPanel(self.panel, "Top Bigrams",
-                                               "Phrases entirely composed of stopwords are excluded.", False)
+
+        self.top_bigrams_panel = WordListPanel(
+            tables_panel, "Top Bigrams",
+            "Phrases entirely composed of stopwords are excluded.", False
+        )
         table_sizer.Add(self.top_bigrams_panel, 1, wx.EXPAND | wx.BOTTOM, 5)
-        self.top_trigrams_panel = WordListPanel(self.panel, "Top Trigrams",
-                                                "Phrases entirely composed of stopwords are excluded.", False)
+
+        self.top_trigrams_panel = WordListPanel(
+            tables_panel, "Top Trigrams",
+            "Phrases entirely composed of stopwords are excluded.", False
+        )
         table_sizer.Add(self.top_trigrams_panel, 1, wx.EXPAND)
 
-        left_sizer.Add(table_sizer, 0, wx.EXPAND | wx.BOTTOM, 10)
+        tables_panel.SetSizer(table_sizer)
+        # Crucial: proportion=1 makes the tables fill all leftover space (no gaps)
+        left_sizer.Add(tables_panel, 1, wx.EXPAND | wx.BOTTOM, 10)
 
         return left_sizer
 
@@ -83,13 +87,13 @@ class MainFrame(wx.Frame):
     def _build_right_rail(self):
         right_sizer = wx.BoxSizer(wx.VERTICAL)
 
-        # Metrics panel container — protects its space
+        # Metrics container — protects its space
         metrics_container = wx.Panel(self.panel)
         metrics_sizer = wx.BoxSizer(wx.VERTICAL)
         self.text_metrics_panel = TextMetricsPanel(metrics_container)
         metrics_sizer.Add(self.text_metrics_panel, 1, wx.EXPAND)
         metrics_container.SetSizer(metrics_sizer)
-        metrics_container.SetMinSize((-1, 150))  # min height to avoid cutting off
+        metrics_container.SetMinSize((-1, 180))  # min height to avoid cutting off
         right_sizer.Add(metrics_container, 0, wx.EXPAND | wx.ALL, 10)
 
         # Stretch spacer pushes bottom panels down
@@ -118,8 +122,9 @@ class MainFrame(wx.Frame):
     # --------------------------
     def on_text_processed(self, result, wx_image=None):
         """Update all panels with processed text and metrics."""
+
+        # Total words (in right rail metrics)
         total_words = result.get('total_words', 0)
-        self.word_count_panel.update_count(total_words)
 
         # Tables
         self.top_nonstopwords_panel.update_list(result.get('top_nonstopwords', []))
@@ -139,6 +144,7 @@ class MainFrame(wx.Frame):
             # --------------------------
             # Compute metrics
             # --------------------------
+            # Split sentences safely for ellipses etc.
             sentence_list = [s.strip() for s in re.split(r'(?<!\.)[.!?]+(?!\.)', text) if s.strip()]
             num_sentences = len(sentence_list)
             sentence_lengths = [len(s.split()) for s in sentence_list]
@@ -151,13 +157,14 @@ class MainFrame(wx.Frame):
             avg_paragraph_len = round(sum(paragraph_lengths) / num_paragraphs, 1) if num_paragraphs > 0 else 0
             longest_paragraph_len = max(paragraph_lengths) if paragraph_lengths else 0
 
-            # Update metrics panel
+            # Update metrics panel (number first, human phrase second)
             metrics = {
+                "Total Words": f"{total_words:,} words total",
                 "Total Sentences": f"{num_sentences:,} sentences",
                 "Total Paragraphs": f"{num_paragraphs:,} paragraphs",
-                "Average Sentence Length": f"{avg_sentence_len:,} words per sentence",
+                "Average Sentence Length": f"{avg_sentence_len:,} words per sentence on average",
                 "Longest Sentence": f"{longest_sentence_len:,} words in the longest sentence",
-                "Average Paragraph Length": f"{avg_paragraph_len:,} words per paragraph",
+                "Average Paragraph Length": f"{avg_paragraph_len:,} words per paragraph on average",
                 "Longest Paragraph": f"{longest_paragraph_len:,} words in the longest paragraph"
             }
             self.text_metrics_panel.update_metrics(metrics)
