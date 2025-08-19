@@ -1,7 +1,7 @@
 import wx
 
 class WordCloudPanel(wx.Panel):
-    def __init__(self, parent, size=(180, 180)):
+    def __init__(self, parent, size=(300, 300)):
         super().__init__(parent, size=size)
         self.SetMinSize(size)
         self.current_image = None
@@ -16,9 +16,10 @@ class WordCloudPanel(wx.Panel):
             w, h = img.GetWidth(), img.GetHeight()
             max_w, max_h = panel_size.GetWidth(), panel_size.GetHeight()
 
+            # Calculate scale to fill the panel while maintaining aspect ratio
             scale_w = max_w / w
             scale_h = max_h / h
-            scale = min(scale_w, scale_h, 1.0)  # Do not upscale
+            scale = min(scale_w, scale_h)  # Allow upscaling to fill available space
 
             new_w = int(w * scale)
             new_h = int(h * scale)
@@ -29,8 +30,9 @@ class WordCloudPanel(wx.Panel):
             static_bitmap = wx.StaticBitmap(self, bitmap=bmp)
             static_bitmap.Bind(wx.EVT_LEFT_DOWN, self.on_click)
 
+            # Use a sizer that expands to fill available space
             sizer = wx.BoxSizer(wx.VERTICAL)
-            sizer.Add(static_bitmap, 0, wx.ALIGN_CENTER)
+            sizer.Add(static_bitmap, 1, wx.EXPAND)
             self.SetSizer(sizer)
             self.Layout()
 

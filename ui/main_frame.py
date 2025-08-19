@@ -6,6 +6,7 @@ from ui.wordcloud_panel import WordCloudPanel
 from ui.text_input_panel import TextInputPanel
 from ui.stop_words_dialog import StopwordsInfoDialog
 from ui.sentence_start_panel import SentenceStartPanel
+from ui.longest_paragraphs_panel import LongestParagraphsPanel
 
 class MainFrame(wx.Frame):
     def __init__(self, parent, title, size):
@@ -23,9 +24,9 @@ class MainFrame(wx.Frame):
         self.word_count_panel = WordCountPanel(panel)
         left_sizer.Add(self.word_count_panel, 0, wx.ALL | wx.ALIGN_LEFT, 10)
 
-        # Wordcloud panel fixed size (small avatar)
-        self.wordcloud_panel = WordCloudPanel(panel)
-        left_sizer.Add(self.wordcloud_panel, 0, wx.ALL | wx.ALIGN_LEFT, 10)
+        # Wordcloud panel - allow it to expand and use more space
+        self.wordcloud_panel = WordCloudPanel(panel, size=(300, 300))
+        left_sizer.Add(self.wordcloud_panel, 1, wx.ALL | wx.ALIGN_CENTER, 10)
 
         # Stopwords info button (gray default style)
         info_btn = wx.Button(panel, label="Learn more about stopwords")
@@ -78,6 +79,13 @@ class MainFrame(wx.Frame):
         # Sentence Start Champion panel
         self.sentence_start_panel = SentenceStartPanel(panel)
         right_sizer.Add(self.sentence_start_panel, 1, wx.EXPAND | wx.ALL, 10)
+        
+        # Add some spacing between panels
+        right_sizer.AddSpacer(10)
+        
+        # Longest Paragraphs panel
+        self.longest_paragraphs_panel = LongestParagraphsPanel(panel)
+        right_sizer.Add(self.longest_paragraphs_panel, 1, wx.EXPAND | wx.ALL, 10)
 
         # Add right rail sizer to main horizontal sizer - give it more space
         main_sizer.Add(right_sizer, 0, wx.EXPAND | wx.ALL, 10)
@@ -108,11 +116,13 @@ class MainFrame(wx.Frame):
         # Update the sentence start panel with the original text
         if 'original_text' in result:
             self.sentence_start_panel.update_analysis(result['original_text'])
+            self.longest_paragraphs_panel.update_analysis(result['original_text'])
         elif hasattr(self.text_input_panel, 'get_text'):
             # Fallback: try to get text from the input panel
             text = self.text_input_panel.get_text()
             if text:
                 self.sentence_start_panel.update_analysis(text)
+                self.longest_paragraphs_panel.update_analysis(text)
 
         if wx_image:
             self.wordcloud_panel.set_wordcloud(wx_image)
