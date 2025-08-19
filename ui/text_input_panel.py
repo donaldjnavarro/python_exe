@@ -90,4 +90,10 @@ class TextInputPanel(wx.Panel):
             return
 
         if self.on_result_callback:
+            # Add the original text to the result for other panels to use
+            result['original_text'] = text
             self.on_result_callback(result, wx_image)
+    
+    def get_text(self):
+        """Get the current text from the text control"""
+        return self.text_ctrl.GetValue()
