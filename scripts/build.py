@@ -10,6 +10,10 @@ EXE_BASE_NAME = "main"
 VERSIONED_PREFIX = "main_v"
 MAIN_SCRIPT = "main.py"
 
+def install_requirements():
+    print("Installing requirements from requirements.txt...")
+    subprocess.run([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"], check=True)
+
 def find_latest_version():
     if not os.path.exists(DIST_DIR):
         return None
@@ -59,11 +63,20 @@ def build_exe():
         "pyinstaller",
         "--onefile",
         "--noconsole",
+        "--clean",
         "--exclude-module=tkinter",
         "--name", EXE_BASE_NAME,
         MAIN_SCRIPT,
         "--hidden-import=docx",
+        "--hidden-import=striprtf",
         "--hidden-import=en_core_web_sm",
+        "--hidden-import=spacy",
+        "--hidden-import=PyPDF2",
+        "--hidden-import=packaging",
+        "--hidden-import=wx",   # wxPython
+        "--hidden-import=wordcloud",
+        "--hidden-import=nltk", 
+
     ]
 
     # Add --add-data for each path
@@ -74,6 +87,8 @@ def build_exe():
     subprocess.run(cmd, check=True)
 
 def main():
+    install_requirements()
+
     latest_ver = find_latest_version()
     if latest_ver is None:
         new_version = "1.0.0"

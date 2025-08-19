@@ -1,0 +1,58 @@
+name: Build EXE
+
+on:
+  pull_request:
+    branches:
+      - main
+      - master
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Upgrade pip and install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+          python -m spacy download en_core_web_sm
+          python -m nltk.downloader popular
+
+      - name: Verify Python package dependencies
+        run: |
+          echo "Installed packages:"
+          pip list
+
+      - name: Generate stopwords file
+        run: python scripts/generate_stopwords.py
+
+      - name: Run build script
+        run: python scripts/build.py
+
+      - name: Verify versioned EXE was created
+        shell: pwsh
+        run: |
+          Write-Host "Checking for versioned EXE in dist folder"
+          $files = Get-ChildItem dist\main_v*.exe
+          if ($files.Count -eq 0) {
+            Write-Error "No versioned EXE found, build failed!"
+            exit 1
+          }
+          Write-Host "Found EXE: $($files[0].FullName)"
+      
+
+      - name: Upload built EXE as artifact (optional)
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: writing-assistant-exe
+          path: dist/main*.exe
