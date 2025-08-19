@@ -22,8 +22,8 @@ class WordCountPanel(wx.Panel):
         self.SetSizer(outer_sizer)
 
     def update_count(self, total_words: int):
-        self.label.SetLabel(f"Total words: {total_words}")
         self.label.Wrap(-1)   # help with text sizing
+        self.label.SetLabel(f"Total words: {total_words:,}")
         self.Layout()
         self.Refresh()
 
