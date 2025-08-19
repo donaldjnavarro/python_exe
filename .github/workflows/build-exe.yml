@@ -38,16 +38,17 @@ jobs:
       - name: Run build script
         run: python scripts/build.py
 
-      - name: Verify EXE was created
+      - name: Verify versioned EXE was created
+        shell: pwsh
         run: |
-          Write-Host "Checking for EXE at dist/main.exe"
-          if (-Not (Test-Path "dist/main.exe")) {
-              Write-Error "EXE not found, build failed!"
-              exit 1
-          } else {
-              Write-Host "EXE found, build succeeded."
+          Write-Host "Checking for versioned EXE in dist folder"
+          $files = Get-ChildItem dist\main_v*.exe
+          if ($files.Count -eq 0) {
+            Write-Error "No versioned EXE found, build failed!"
+            exit 1
           }
-
+          Write-Host "Found EXE: $($files[0].FullName)"
+      
 
       - name: Upload built EXE as artifact (optional)
         if: success()
