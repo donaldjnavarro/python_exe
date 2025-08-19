@@ -1,6 +1,7 @@
 import wx
 from utils.text_analysis import STOPWORDS
 from ui.word_list_panel import WordListPanel
+from ui.word_count_panel import WordCountPanel
 from ui.wordcloud_panel import WordCloudPanel
 from ui.text_input_panel import TextInputPanel
 from ui.stop_words_dialog import StopwordsInfoDialog
@@ -17,6 +18,10 @@ class MainFrame(wx.Frame):
         # Left rail vertical sizer: stacks elements vertically
         # --------------------------
         left_sizer = wx.BoxSizer(wx.VERTICAL)
+
+        # Word count panel (shows total word count)
+        self.word_count_panel = WordCountPanel(panel)
+        left_sizer.Add(self.word_count_panel, 0, wx.ALL | wx.ALIGN_LEFT, 10)
 
         # Wordcloud panel fixed size (small avatar)
         self.wordcloud_panel = WordCloudPanel(panel)
@@ -93,6 +98,9 @@ class MainFrame(wx.Frame):
         dlg.Destroy()
 
     def on_text_processed(self, result, wx_image=None):
+        # Update word count panel
+        self.word_count_panel.update_count(result['total_words'])
+        
         self.top_nonstopwords_panel.update_list(result['top_nonstopwords'])
         self.top_bigrams_panel.update_list(result['top_bigrams'])
         self.top_trigrams_panel.update_list(result['top_trigrams'])
