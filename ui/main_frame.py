@@ -1,5 +1,4 @@
 import wx
-from utils.text_analysis import STOPWORDS
 from ui.word_list_panel import WordListPanel
 from ui.word_count_panel import WordCountPanel
 from ui.wordcloud_panel import WordCloudPanel
@@ -24,9 +23,9 @@ class MainFrame(wx.Frame):
         self.word_count_panel = WordCountPanel(panel)
         left_sizer.Add(self.word_count_panel, 0, wx.ALL | wx.ALIGN_LEFT, 10)
 
-        # Wordcloud panel - allow it to expand and use more space
-        self.wordcloud_panel = WordCloudPanel(panel, size=(300, 300))
-        left_sizer.Add(self.wordcloud_panel, 1, wx.ALL | wx.ALIGN_CENTER, 10)
+        # Wordcloud panel — let it size naturally
+        self.wordcloud_panel = WordCloudPanel(panel)
+        left_sizer.Add(self.wordcloud_panel, 1, wx.EXPAND | wx.ALL, 10)
 
         # Stopwords info button (gray default style)
         info_btn = wx.Button(panel, label="Learn more about stopwords")
