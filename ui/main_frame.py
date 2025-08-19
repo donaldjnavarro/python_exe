@@ -7,8 +7,7 @@ from ui.stop_words_dialog import StopwordsInfoDialog
 from ui.sentence_start_panel import SentenceStartPanel
 from ui.longest_paragraphs_panel import LongestParagraphsPanel
 from ui.text_metrics_panel import TextMetricsPanel
-
-
+from ui.dialogue_panel import DialogueNarrationPanel
 class MainFrame(wx.Frame):
     """Main application window: left rail, center text input, right rail."""
     def __init__(self, parent, title="Text Analysis", size=(1200, 600)):
@@ -97,6 +96,11 @@ class MainFrame(wx.Frame):
 
         # Stretch spacer pushes bottom panels down
         right_sizer.AddStretchSpacer(1)
+        
+        # Dialogue panel
+        self.dialogue_panel = DialogueNarrationPanel(self.panel)
+        right_sizer.Add(self.dialogue_panel, 0, wx.EXPAND | wx.ALL, 10)
+
 
         # Sentence Start panel (bottom)
         self.sentence_start_panel = SentenceStartPanel(self.panel)
@@ -122,7 +126,7 @@ class MainFrame(wx.Frame):
     def on_text_processed(self, result, wx_image=None):
         """Update all panels with processed text and metrics."""
 
-        # Total words (moved to right rail metrics)
+        # Total words (in right rail metrics)
         total_words = result.get('total_words', 0)
 
         # Tables
@@ -143,6 +147,7 @@ class MainFrame(wx.Frame):
             # --------------------------
             # Compute metrics
             # --------------------------
+            # Split sentences safely for ellipses etc.
             sentence_list = [s.strip() for s in re.split(r'(?<!\.)[.!?]+(?!\.)', text) if s.strip()]
             num_sentences = len(sentence_list)
             sentence_lengths = [len(s.split()) for s in sentence_list]
@@ -155,9 +160,22 @@ class MainFrame(wx.Frame):
             avg_paragraph_len = round(sum(paragraph_lengths) / num_paragraphs, 1) if num_paragraphs > 0 else 0
             longest_paragraph_len = max(paragraph_lengths) if paragraph_lengths else 0
 
-            # Update metrics panel: number first, human-readable phrasing
+            # --------------------------
+            # Compute dialogue vs narration
+            # --------------------------
+            # Match quoted text as dialogue
+            dialogue_matches = re.findall(r'“.*?”|".*?"', text)
+            dialogue_words = sum(len(d.split()) for d in dialogue_matches)
+            narration_words = total_words - dialogue_words
+
+            # Update the dialogue panel
+            self.dialogue_panel.update_counts(dialogue_words, narration_words)
+
+            # --------------------------
+            # Update metrics panel
+            # --------------------------
             metrics = {
-                "Total Words": f"{total_words:,} words",  # largest / bold via TextMetricsPanel
+                "Total Words": f"{total_words:,} words",
                 "Sentences": "Sentences",
                 "Total Sentences": f"{num_sentences:,} sentences",
                 "Average Sentence Length": f"{avg_sentence_len} average words per sentence",
