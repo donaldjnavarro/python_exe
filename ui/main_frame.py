@@ -159,12 +159,12 @@ class MainFrame(wx.Frame):
 
             # Update metrics panel (number first, human phrase second)
             metrics = {
-                "Total Words": f"{total_words:,} words total",
+                "Total Words": f"{total_words:,} words",
                 "Total Sentences": f"{num_sentences:,} sentences",
                 "Total Paragraphs": f"{num_paragraphs:,} paragraphs",
-                "Average Sentence Length": f"{avg_sentence_len:,} words per sentence on average",
+                "Average Sentence Length": f"{avg_sentence_len} words per sentence",
                 "Longest Sentence": f"{longest_sentence_len:,} words in the longest sentence",
-                "Average Paragraph Length": f"{avg_paragraph_len:,} words per paragraph on average",
+                "Average Paragraph Length": f"{avg_paragraph_len} words per paragraph",
                 "Longest Paragraph": f"{longest_paragraph_len:,} words in the longest paragraph"
             }
             self.text_metrics_panel.update_metrics(metrics)
