@@ -40,12 +40,14 @@ jobs:
 
       - name: Verify EXE was created
         run: |
-          echo "Checking for EXE at dist/main.exe"
-          if not exist dist\main.exe (
-            echo "❌ EXE not found — build failed!"
-            exit 1
-          )
-          echo "✅ EXE found — build succeeded."
+          Write-Host "Checking for EXE at dist/main.exe"
+          if (-Not (Test-Path "dist/main.exe")) {
+              Write-Error "EXE not found, build failed!"
+              exit 1
+          } else {
+              Write-Host "EXE found, build succeeded."
+          }
+
 
       - name: Upload built EXE as artifact (optional)
         if: success()
