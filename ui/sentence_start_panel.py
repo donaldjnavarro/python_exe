@@ -102,7 +102,7 @@ class SentenceStartPanel(wx.Panel):
         for i, result in enumerate(self.top_paragraphs):
             if result:
                 index = self.paragraphs_list.InsertItem(i, str(result["count"]))  # Count
-                self.paragraphs_list.SetItem(index, 1, f'"{result["word"]}"')  # Word
+                self.paragraphs_list.SetItem(index, 1, f'{result["word"]}')  # Word
                 # Add preview text (truncated to fit column)
                 preview_text = self._truncate_text(result["paragraph"], 50)
                 self.paragraphs_list.SetItem(index, 2, preview_text)  # Preview
@@ -112,7 +112,7 @@ class SentenceStartPanel(wx.Panel):
         for i, result in enumerate(self.top_nonstopword_paragraphs):
             if result:
                 index = self.nonstopword_paragraphs_list.InsertItem(i, str(result["count"]))  # Count
-                self.nonstopword_paragraphs_list.SetItem(index, 1, f'"{result["word"]}"')  # Word
+                self.nonstopword_paragraphs_list.SetItem(index, 1, f'{result["word"]}')  # Word
                 # Add preview text (truncated to fit column)
                 preview_text = self._truncate_text(result["paragraph"], 50)
                 self.nonstopword_paragraphs_list.SetItem(index, 2, preview_text)  # Preview
