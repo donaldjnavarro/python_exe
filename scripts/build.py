@@ -6,8 +6,8 @@ import shutil
 import sys
 
 DIST_DIR = "dist"
-EXE_BASE_NAME = "main"
-VERSIONED_PREFIX = "main_v"
+EXE_BASE_NAME = "writing_assistant"
+VERSIONED_PREFIX = "writing_assistant_v"
 MAIN_SCRIPT = "main.py"
 
 def install_requirements():
