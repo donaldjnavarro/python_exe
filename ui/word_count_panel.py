@@ -4,8 +4,6 @@ class WordCountPanel(wx.Panel):
     def __init__(self, parent):
         super().__init__(parent)
 
-        self.SetBackgroundColour(wx.Colour(220, 230, 250))  # panel bg color
-
         self.label = wx.StaticText(self, label="Total words: 0")
 
         font = self.label.GetFont()
@@ -13,12 +11,15 @@ class WordCountPanel(wx.Panel):
         font = font.Bold()
         self.label.SetFont(font)
 
-        self.label.SetForegroundColour(wx.Colour(10, 36, 99))
-        self.label.SetBackgroundColour(wx.Colour(220, 230, 250))  # match panel bg
+        # Outer sizer fills the panel
+        outer_sizer = wx.BoxSizer(wx.VERTICAL)
 
-        sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(self.label, 0, wx.ALL | wx.ALIGN_CENTER, 20)
-        self.SetSizer(sizer)
+        # Center label inside the expanded panel
+        outer_sizer.AddStretchSpacer(1)  # push label down
+        outer_sizer.Add(self.label, 0, wx.ALIGN_CENTER | wx.ALL, 10)
+        outer_sizer.AddStretchSpacer(1)  # push label up
+
+        self.SetSizer(outer_sizer)
 
     def update_count(self, total_words: int):
         self.label.SetLabel(f"Total words: {total_words}")
@@ -26,7 +27,7 @@ class WordCountPanel(wx.Panel):
         self.Layout()
         self.Refresh()
 
-        # Also refresh parent panel in case
+        # Refresh parent too
         parent = self.GetParent()
         if parent:
             parent.Layout()
