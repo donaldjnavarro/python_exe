@@ -45,7 +45,7 @@ class SentenceStartPanel(wx.Panel):
         main_sizer.AddSpacer(10)
         
         # Second panel for non-stopword results
-        nonstopword_title = wx.StaticText(self, label="Top Sentence Starters (Non-Stopword)")
+        nonstopword_title = wx.StaticText(self, label="Top Sentence Starters (Ignoring stopwords)")
         nonstopword_font = nonstopword_title.GetFont()
         nonstopword_font.SetWeight(wx.FONTWEIGHT_BOLD)
         nonstopword_title.SetFont(nonstopword_font)
